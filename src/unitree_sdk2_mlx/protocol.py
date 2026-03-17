@@ -6,7 +6,7 @@ All structs are little-endian on the wire.
 from __future__ import annotations
 
 import struct
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -207,8 +207,8 @@ class PointData3D:
     angle_increment: float = 0.0
     time_increment: float = 0.0
     point_num: int = 0
-    ranges: np.ndarray = None  # uint16[300]
-    intensities: np.ndarray = None  # uint8[300]
+    ranges: np.ndarray = field(default_factory=lambda: np.zeros(300, dtype=np.uint16))
+    intensities: np.ndarray = field(default_factory=lambda: np.zeros(300, dtype=np.uint8))
     # Inside state (kept for dirty index etc.)
     dirty_index: float = 0.0
 
@@ -271,8 +271,8 @@ class PointData2D:
     angle_increment: float = 0.0
     time_increment: float = 0.0
     point_num: int = 0
-    ranges: np.ndarray = None  # uint16[1800]
-    intensities: np.ndarray = None  # uint8[1800]
+    ranges: np.ndarray = field(default_factory=lambda: np.zeros(1800, dtype=np.uint16))
+    intensities: np.ndarray = field(default_factory=lambda: np.zeros(1800, dtype=np.uint8))
     dirty_index: float = 0.0
 
     @classmethod

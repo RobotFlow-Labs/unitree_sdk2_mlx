@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import glob
+import logging
 import sys
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 try:
     import serial
@@ -41,17 +44,17 @@ class SerialTransport:
         self._port = port
         self._baudrate = baudrate
         self._timeout = timeout
-        self._serial: Optional[serial.Serial] = None
+        self._serial: Optional[object] = None  # serial.Serial when available
 
     def open(self) -> int:
         """Open serial port. Returns 0 on success, -1 on failure."""
         if not HAS_SERIAL:
-            print("pyserial not installed. Run: uv pip install pyserial")
+            logger.error("pyserial not installed. Run: uv pip install pyserial")
             return -1
 
         port = self._port or find_unitree_serial_port()
         if port is None:
-            print("No Unitree LiDAR serial port found.")
+            logger.error("No Unitree LiDAR serial port found.")
             return -1
 
         try:
@@ -65,7 +68,7 @@ class SerialTransport:
             )
             return 0
         except (serial.SerialException, OSError) as e:
-            print(f"Failed to open serial port {port}: {e}")
+            logger.error("Failed to open serial port %s: %s", port, e)
             self._serial = None
             return -1
 
@@ -82,7 +85,7 @@ class SerialTransport:
             if waiting == 0:
                 return b""
             return self._serial.read(min(waiting, max_bytes))
-        except (serial.SerialException, OSError):
+        except (OSError, Exception):
             return b""
 
     def write(self, data: bytes) -> int:
@@ -90,7 +93,7 @@ class SerialTransport:
             return 0
         try:
             return self._serial.write(data)
-        except (serial.SerialException, OSError):
+        except (OSError, Exception):
             return 0
 
     @property

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import socket
 import select
+
+logger = logging.getLogger(__name__)
 
 
 class UDPTransport:
@@ -15,7 +18,7 @@ class UDPTransport:
         lidar_ip: str = "192.168.1.62",
         local_port: int = 6201,
         local_ip: str = "192.168.1.2",
-        recv_timeout: float = 1.0,
+        recv_timeout: float = 0.01,
     ):
         self._lidar_addr = (lidar_ip, lidar_port)
         self._local_addr = (local_ip, local_port)
@@ -30,7 +33,8 @@ class UDPTransport:
             self._sock.bind(self._local_addr)
             self._sock.setblocking(False)
             return 0
-        except OSError:
+        except OSError as e:
+            logger.error("Failed to open UDP socket on %s: %s", self._local_addr, e)
             self._sock = None
             return -1
 
