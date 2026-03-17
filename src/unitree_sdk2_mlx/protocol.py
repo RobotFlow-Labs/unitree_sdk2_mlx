@@ -101,12 +101,12 @@ SIZE_MAC_CONFIG = 8
 # ─── Struct sizes for point data payloads ────────────────────────────────────
 
 # LidarPointData fixed header before arrays:
-# DataInfo(16) + InsideState(36) + CalibParam(32) + 9 floats(36) + 1 uint32(4) = 124
-_POINT_DATA_HEADER_SIZE = SIZE_DATA_INFO + SIZE_INSIDE_STATE + SIZE_CALIB_PARAM + 9 * 4 + 4
+# DataInfo(16) + InsideState(36) + CalibParam(32) + 8 floats(32) + 1 uint32(4) = 120
+_POINT_DATA_HEADER_SIZE = SIZE_DATA_INFO + SIZE_INSIDE_STATE + SIZE_CALIB_PARAM + 8 * 4 + 4
 # 300 uint16 ranges + 300 uint8 intensities = 900
 _POINT_DATA_ARRAYS_SIZE = 300 * 2 + 300 * 1
-# Total LidarPointData = 1024 bytes (but protocol says 1012 — we compute from struct)
-POINT_DATA_3D_SIZE = _POINT_DATA_HEADER_SIZE + _POINT_DATA_ARRAYS_SIZE  # 1024
+# Total LidarPointData = 1020 bytes. Full packet = 12 + 1020 + 12 = 1044
+POINT_DATA_3D_SIZE = _POINT_DATA_HEADER_SIZE + _POINT_DATA_ARRAYS_SIZE  # 1020
 
 # Lidar2DPointData:
 # DataInfo(16) + InsideState(36) + CalibParam(32) + 6 floats(24) + 1 uint32(4) = 112
@@ -229,9 +229,9 @@ class PointData3D:
         calib = CalibParam.from_bytes(data, o)
         o += SIZE_CALIB_PARAM
 
-        # 9 floats + 1 uint32
-        scan_fields = struct.unpack_from("<9fI", data, o)
-        o += 9 * 4 + 4
+        # 8 floats + 1 uint32 (matches C++ LidarPointData struct exactly)
+        scan_fields = struct.unpack_from("<8fI", data, o)
+        o += 8 * 4 + 4
 
         # Ranges: 300 uint16
         ranges = np.frombuffer(data, dtype=np.uint16, count=MAX_POINTS_3D, offset=o).copy()
@@ -251,7 +251,7 @@ class PointData3D:
             angle_min=scan_fields[5],
             angle_increment=scan_fields[6],
             time_increment=scan_fields[7],
-            point_num=scan_fields[9],  # uint32 after 9 floats (index 8 is last float)
+            point_num=scan_fields[8],  # uint32 after 8 floats
             ranges=ranges,
             intensities=intensities,
             dirty_index=dirty_index,

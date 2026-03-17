@@ -86,6 +86,13 @@ class UnitreeLidarReader:
 
         self._last_ack: Optional[AckDataPacket] = None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return False
+
     # ── Initialization ───────────────────────────────────────────────────
 
     def initialize_udp(
@@ -205,7 +212,9 @@ class UnitreeLidarReader:
         else:
             combined = np.empty((0, 6), dtype=np.float32)
 
-        stamp = time.time() if self._use_system_timestamp else (
+        # Match C++ behavior: subtract scan_period from system timestamp
+        scan_period = self._point_packets[0].scan_period if self._point_packets else 0.0
+        stamp = (time.time() - scan_period) if self._use_system_timestamp else (
             self._point_packets[0].info.stamp if self._point_packets else 0.0
         )
 

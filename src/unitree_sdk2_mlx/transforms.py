@@ -22,7 +22,7 @@ def transform_3d(
         Nx6 float32 array: [x, y, z, intensity, time, ring]
         Empty (0,6) array if no valid points.
     """
-    n = packet.point_num
+    n = min(packet.point_num, len(packet.ranges))
     if n <= 0:
         return np.empty((0, 6), dtype=np.float32)
 
@@ -106,7 +106,7 @@ def transform_2d(
     Returns:
         Nx6 float32 array: [x, y, z, intensity, time, ring]
     """
-    n = packet.point_num
+    n = min(packet.point_num, len(packet.ranges))
     if n <= 0:
         return np.empty((0, 6), dtype=np.float32)
 

@@ -69,9 +69,10 @@ class FrameParser:
     def feed(self, data: bytes) -> None:
         """Append raw bytes from transport into the internal buffer."""
         self._buffer.extend(data)
-        # Prevent unbounded growth
+        # Prevent unbounded growth — reset state to avoid corrupting in-progress frames
         if len(self._buffer) > self._max_buffer:
             self._buffer = self._buffer[-self._max_buffer:]
+            self._state = _State.SEEKING_HEADER
 
     def parse_one(self) -> Optional[ParsedPacket]:
         """Try to parse one complete packet from the buffer.
